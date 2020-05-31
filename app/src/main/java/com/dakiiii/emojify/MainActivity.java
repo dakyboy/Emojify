@@ -22,6 +22,7 @@ import androidx.core.content.FileProvider;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -106,15 +107,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            processAndSetImage();
+            try {
+                processAndSetImage();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             BitmapUtils.deleteImageFile(this, eTempPhotoPath);
         }
     }
 
-    private void processAndSetImage() {
+    private void processAndSetImage() throws IOException {
         setFloatingButtonsVisible();
         eResultsBitmap = BitmapUtils.resamplePic(this, eTempPhotoPath);
+        Emojifier.detectFaces(this, eResultsBitmap);
         eImageView.setImageBitmap(eResultsBitmap);
 
     }
