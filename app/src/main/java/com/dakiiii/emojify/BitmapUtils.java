@@ -62,6 +62,10 @@ public class BitmapUtils {
         return deleted;
     }
 
+    private static void galleryAddPic(Context context, String imagePath) {
+
+    }
+
     static String saveImage(Context context, Bitmap image) {
         String savedImagePath = null;
 
@@ -85,7 +89,12 @@ public class BitmapUtils {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            galleryAddPic(context, savedImagePath);
+
+            String savedMessage = context.getString(R.string.saved_message, savedImagePath);
+            Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show();
         }
+
         return savedImagePath;
     }
 
