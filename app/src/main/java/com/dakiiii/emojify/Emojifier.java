@@ -21,6 +21,8 @@ import java.util.List;
 
 public class Emojifier {
     private static final String LOG_TAG = Emojifier.class.getSimpleName();
+    private static final double SMILING_PROB_THRESHOLD = .2;
+    private static final double EYE_OPEN_THRESHOLD = .6;
 
     static void detectFaces(final Context context, Bitmap bitmap) throws IOException {
         FirebaseVisionFaceDetectorOptions faceDetectorOptions;
@@ -40,9 +42,10 @@ public class Emojifier {
                         if (firebaseVisionFaces.size() == 0) {
                             Toast.makeText(context, "no faces found", Toast.LENGTH_SHORT).show();
                         } else {
-                            for (int i = 0; i <firebaseVisionFaces.size(); i++) {
+                            Toast.makeText(context, firebaseVisionFaces.size() + " faces found", Toast.LENGTH_SHORT).show();
+                            for (int i = 0; i < firebaseVisionFaces.size(); i++) {
                                 FirebaseVisionFace face = firebaseVisionFaces.get(i);
-                                getClassifications(face);
+                                whichEmoji(face);
                             }
                         }
                         Log.d(LOG_TAG, Integer.toString(firebaseVisionFaces.size()));
@@ -58,7 +61,48 @@ public class Emojifier {
         faceDetector.close();
     }
 
-    private static void getClassifications(FirebaseVisionFace face) {
-        Log.d(LOG_TAG, "getClassifications: smilingProb = " + face.getSmilingProbability());
+    private static void whichEmoji(FirebaseVisionFace face) {
+        Log.d(LOG_TAG, "getClassifications: smiling Prob = " + face.getSmilingProbability());
+        Log.d(LOG_TAG, "getClassifications: Left Eye Open Prob = " + face.getLeftEyeOpenProbability());
+        Log.d(LOG_TAG, "getClassifications: Right Eye Open Prob = " + face.getRightEyeOpenProbability());
+
+        boolean smiling = face.getSmilingProbability() > SMILING_PROB_THRESHOLD;
+        boolean leftEyeClosed = face.getLeftEyeOpenProbability() < EYE_OPEN_THRESHOLD;
+        boolean rightEyeClosed = face.getRightEyeOpenProbability() < EYE_OPEN_THRESHOLD;
+
+        Emoji emoji;
+        if (smiling) {
+            if (leftEyeClosed && !rightEyeClosed) {
+                emoji = Emoji.LEFT_WINK;
+            } else if (rightEyeClosed && !leftEyeClosed) {
+                emoji = Emoji.RIGHT_WINK;
+            } else if (leftEyeClosed) {
+                emoji = Emoji.CLOSED_EYE_SMILE;
+            } else {
+                emoji = Emoji.SMILE;
+            }
+        } else {
+            if (leftEyeClosed && !rightEyeClosed) {
+                emoji = Emoji.LEFT_WINK_FROWN;
+            } else if (rightEyeClosed && !leftEyeClosed) {
+                emoji = Emoji.RIGHT_WINK_FROWN;
+            } else if (leftEyeClosed) {
+                emoji = Emoji.CLOSED_EYE_FROWN;
+            } else {
+                emoji = Emoji.FROWN;
+            }
+        }
+        Log.d(LOG_TAG, "dat emoji: " + emoji.name());
+    }
+
+    private enum Emoji {
+        SMILE,
+        FROWN,
+        LEFT_WINK,
+        RIGHT_WINK,
+        LEFT_WINK_FROWN,
+        RIGHT_WINK_FROWN,
+        CLOSED_EYE_SMILE,
+        CLOSED_EYE_FROWN
     }
 }
